@@ -1,6 +1,3 @@
-const properties = require('./json/properties.json');
-const users = require('./json/users.json');
-
 const { Pool } = require('pg');
 
 const pool = new Pool({
@@ -59,13 +56,13 @@ const addUser = function(user) {
 
   const queryParams = [user.name, user.email, user.password];
   const queryString = `
-INSERT INTO users (
+  INSERT INTO users (
   name, email, password) 
   VALUES ($1, $2, $3)
   RETURNING *;
 `;
 
-  pool.query(queryString, queryParams)
+  return pool.query(queryString, queryParams)
     .then(res => res.rows);
 };
 
@@ -80,9 +77,9 @@ exports.addUser = addUser;
  * @return {Promise<[{}]>} A promise to the reservations.
  */
 
-const getAllReservations = function(guest_id, limit = 10) {
+const getAllReservations = function(guest_id) {
 
-  const queryParams = [guest_id, limit];
+  const queryParams = [guest_id];
   const queryString = `
   SELECT properties.*, reservations.*, avg(rating) as average_rating
   FROM reservations
@@ -92,7 +89,7 @@ const getAllReservations = function(guest_id, limit = 10) {
   AND reservations.end_date < now()::date
   GROUP BY properties.id, reservations.id
   ORDER BY reservations.start_date
-  LIMIT $2;
+  LIMIT 10;
 `;
 
   return pool.query(queryString, queryParams)
@@ -148,7 +145,7 @@ const getAllProperties = function(options, limit = 10) {
   `;
 
   return pool.query(queryString, queryParams)
-    .then(res => res.rows)
+    .then(res => res.rows);
 };
 
 exports.getAllProperties = getAllProperties;
@@ -173,8 +170,8 @@ const addProperty = function(property) {
     RETURNING *;
   `;
   return pool.query(queryString, queryParams)
-  .then(res => res.rows);
-}
+    .then(res => res.rows);
+};
 
 
 exports.addProperty = addProperty;
